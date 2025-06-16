@@ -2,7 +2,7 @@ import unittest
 import os
 import json
 from tempfile import NamedTemporaryFile
-from models.category import Category
+from src.category import Category
 
 
 class TestJsonLoader(unittest.TestCase):
