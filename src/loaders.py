@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 from typing import List
-from category import Category
+from src.category import Category
 
 
 class DataLoader:
@@ -13,7 +13,7 @@ class DataLoader:
         :return: Список категорий с товарами
         """
         try:
-            with open(file_path, 'r', encoding='utf-8') as file:
+            with open(file_path, "r", encoding="utf-8") as file:
                 data = json.load(file)
             return [Category.from_dict(category_data) for category_data in data]
         except FileNotFoundError:
@@ -37,13 +37,13 @@ class DataLoader:
                         "name": prod.name,
                         "description": prod.description,
                         "price": prod.price,
-                        "quantity": prod.quantity
+                        "quantity": prod.quantity,
                     }
                     for prod in cat.products
-                ]
+                ],
             }
             for cat in categories
         ]
 
-        with open(file_path, 'w', encoding='utf-8') as file:
+        with open(file_path, "w", encoding="utf-8") as file:
             json.dump(data, file, ensure_ascii=False, indent=4)

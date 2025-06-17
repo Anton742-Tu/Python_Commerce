@@ -6,30 +6,23 @@ from src.category import Category
 
 
 class TestJsonLoader(unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         # Создаем временный JSON файл для тестов
         self.test_data = [
             {
                 "name": "Тестовая категория",
                 "description": "Описание",
-                "products": [
-                    {
-                        "name": "Тестовый продукт",
-                        "description": "Описание",
-                        "price": 1000.0,
-                        "quantity": 10
-                    }
-                ]
+                "products": [{"name": "Тестовый продукт", "description": "Описание", "price": 1000.0, "quantity": 10}],
             }
         ]
-        self.temp_file = NamedTemporaryFile(mode='w+', delete=False, suffix='.json')
+        self.temp_file = NamedTemporaryFile(mode="w+", delete=False, suffix=".json")
         json.dump(self.test_data, self.temp_file)
         self.temp_file.close()
 
-    def tearDown(self):
+    def tearDown(self) -> None:
         os.unlink(self.temp_file.name)
 
-    def test_load_from_json(self):
+    def test_load_from_json(self) -> None:
         """Тест загрузки из JSON файла"""
         categories = Category.load_from_json(self.temp_file.name)
         self.assertEqual(len(categories), 1)
@@ -37,14 +30,14 @@ class TestJsonLoader(unittest.TestCase):
         self.assertEqual(len(categories[0].products), 1)
         self.assertEqual(categories[0].products[0].name, "Тестовый продукт")
 
-    def test_file_not_found(self):
+    def test_file_not_found(self) -> None:
         """Тест обработки отсутствующего файла"""
         with self.assertRaises(FileNotFoundError):
             Category.load_from_json("nonexistent_file.json")
 
-    def test_invalid_json(self):
+    def test_invalid_json(self) -> None:
         """Тест обработки невалидного JSON"""
-        with open(self.temp_file.name, 'w') as f:
+        with open(self.temp_file.name, "w") as f:
             f.write("invalid json")
 
         with self.assertRaises(json.JSONDecodeError):
