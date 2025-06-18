@@ -9,7 +9,7 @@ class Category:
     def __init__(self, name: str, description: str, products: Optional[List[Product]] = None):
         self.name = name
         self.description = description
-        self.__products = products if products is not None else []
+        self.__products = products or []
 
         Category._category_count += 1
         Category._product_count += len(self.__products)
