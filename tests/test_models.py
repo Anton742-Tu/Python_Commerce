@@ -1,13 +1,14 @@
 import unittest
+from unittest.mock import patch
+
 from src.product import Product
 from src.category import Category
+from typing import Any
 
 
 class TestProduct(unittest.TestCase):
-    """Тесты для класса Product"""
-
     def test_product_initialization(self) -> None:
-        """Проверка инициализации продукта"""
+        """Тест инициализации продукта"""
         product = Product(name="Тестовый продукт", description="Тестовое описание", price=1000.0, quantity=10)
 
         self.assertEqual(product.name, "Тестовый продукт")
@@ -16,14 +17,12 @@ class TestProduct(unittest.TestCase):
         self.assertEqual(product.quantity, 10)
 
     def test_product_str(self) -> None:
-        """Проверка строкового представления"""
+        """Тест строкового представления"""
         product = Product("Продукт", "Описание", 500.0, 2)
-        self.assertEqual(str(product), "Продукт, 500.0 руб. (Осталось: 2)")
+        self.assertEqual(str(product), "Продукт, 500.0 руб. Остаток: 2 шт.")
 
 
 class TestCategory(unittest.TestCase):
-    """Тесты для класса Category"""
-
     def setUp(self) -> None:
         """Подготовка тестовых данных"""
         Category.reset_counters()
@@ -34,34 +33,33 @@ class TestCategory(unittest.TestCase):
         )
 
     def test_category_initialization(self) -> None:
-        """Проверка инициализации категории"""
+        """Тест инициализации категории"""
         self.assertEqual(self.test_category.name, "Тестовая категория")
         self.assertEqual(self.test_category.description, "Тестовое описание")
-        self.assertEqual(len(self.test_category.products), 1)
-        self.assertEqual(self.test_category.products[0].name, "Продукт 1")
+        self.assertEqual(len(self.test_category.products.split("\n")), 1)
 
     def test_category_count(self) -> None:
-        """Проверка подсчета категорий"""
-        self.assertEqual(Category._category_count, 1)
+        """Тест подсчета категорий"""
+        self.assertEqual(Category.get_total_categories(), 1)
         Category("Другая категория", "Описание")
-        self.assertEqual(Category._category_count, 2)
+        self.assertEqual(Category.get_total_categories(), 2)
 
     def test_product_count(self) -> None:
-        """Проверка подсчета продуктов"""
-        self.assertEqual(Category._product_count, 1)
+        """Тест подсчета продуктов"""
+        self.assertEqual(Category.get_total_products(), 1)
         self.test_category.add_product(self.test_product2)
-        self.assertEqual(Category._product_count, 2)
+        self.assertEqual(Category.get_total_products(), 2)
 
     def test_category_str(self) -> None:
-        """Проверка строкового представления"""
+        """Тест строкового представления"""
         self.assertEqual(str(self.test_category), "Тестовая категория, количество продуктов: 1 шт.")
 
-    def test_add_product(self) -> None:
-        """Проверка добавления продукта"""
-        initial_count = len(self.test_category.products)
-        self.test_category.add_product(self.test_product2)
-        self.assertEqual(len(self.test_category.products), initial_count + 1)
-        self.assertIn(self.test_product2, self.test_category.products)
+    @patch("builtins.print")
+    def test_add_invalid_product(self, mock_print: Any) -> None:
+        """Тест добавления невалидного продукта"""
+        with self.assertRaises(TypeError):
+            self.test_category.add_product("not a product")  # type: ignore
+        mock_print.assert_not_called()
 
 
 if __name__ == "__main__":
