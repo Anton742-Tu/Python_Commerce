@@ -7,7 +7,7 @@ from .product import Product
 
 class Category:
     _category_count: int = 0
-    product_count: int = 0
+    _product_count: int = 0
 
     def __init__(self, name: str, description: str, products: Optional[List[Product]] = None):
         """
@@ -21,29 +21,33 @@ class Category:
         self.__products = products.copy() if products else []
 
         Category._category_count += 1
-        Category.product_count += len(self.__products)
+        Category._product_count += len(self.__products)
+
+    def __str__(self) -> str:
+        """
+        Возвращает строковое представление категории с общим количеством товаров
+        Формат: "Название категории, количество продуктов: X, общее количество товаров: Y"
+        """
+        total_quantity = sum(product.quantity for product in self.__products)
+        return (f"{self.name}, количество продуктов: {len(self.__products)}, "
+                f"общее количество товаров: {total_quantity}")
 
     @property
     def products(self) -> str:
-        """
-        Возвращает форматированную строку с товарами
-        :return: Строка вида "Название, цена руб. Остаток: кол-во шт."
-        """
-        return "\n".join(
-            f"{product.name}, {product.price} руб. Остаток: {product.quantity} шт." for product in self.__products
-        )
+        """Возвращает строку с перечислением всех товаров"""
+        return "\n".join(str(product) for product in self.__products)
 
     def add_product(self, product: Product) -> None:
-        """
-        Добавляет товар в категорию
-        :param product: Объект класса Product
-        :raises TypeError: Если передан не объект Product
-        """
+        """Добавляет товар в категорию"""
         if not isinstance(product, Product):
             raise TypeError("Можно добавлять только объекты класса Product")
-
         self.__products.append(product)
-        Category.product_count += 1
+        Category._product_count += 1
+
+    @property
+    def total_quantity(self) -> int:
+        """Возвращает общее количество товаров в категории"""
+        return sum(product.quantity for product in self.__products)
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> Category:
@@ -107,9 +111,6 @@ class Category:
         """Сбрасывает счетчики категорий и товаров"""
         cls._category_count = 0
         cls.product_count = 0
-
-    def __str__(self) -> str:
-        return f"{self.name}, количество продуктов: {self.products_count} шт."
 
     def __len__(self) -> int:
         return self.products_count
