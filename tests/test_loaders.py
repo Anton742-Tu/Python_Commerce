@@ -2,54 +2,76 @@ import unittest
 import os
 import json
 from tempfile import NamedTemporaryFile
-from src.category import Category
+from unittest.mock import patch
+from src.loaders import JsonLoader
 
 
 class TestJsonLoader(unittest.TestCase):
     def setUp(self) -> None:
+        """Подготовка тестовых данных"""
         self.test_data = [
             {
-                "name": "Тестовая категория",
-                "description": "Описание",
-                "products": [{"name": "Тестовый продукт", "description": "Описание", "price": 1000.0, "quantity": 10}],
+                "name": "Smartphones",
+                "description": "Mobile devices",
+                "products": [{"name": "iPhone 15", "description": "Flagship", "price": 999.99, "quantity": 10}],
             }
         ]
-        self.temp_file = NamedTemporaryFile(mode="w+", delete=False, suffix=".json")
+
+        self.temp_file = NamedTemporaryFile(mode="w+", encoding="utf-8", delete=False, suffix=".json")
         json.dump(self.test_data, self.temp_file, ensure_ascii=False, indent=2)
         self.temp_file.close()
 
     def tearDown(self) -> None:
-        os.unlink(self.temp_file.name)
+        """Удаление временного файла"""
+        if os.path.exists(self.temp_file.name):
+            os.unlink(self.temp_file.name)
+
+    def test_load_valid_data(self) -> None:
+        """Тест загрузки валидного JSON файла"""
+        categories = JsonLoader.load_categories(self.temp_file.name)
+        self.assertEqual(len(categories), 1)
+        self.assertEqual(categories[0].name, "Smartphones")
+        self.assertEqual(len(categories[0].products.split("\n")), 1)
 
     def test_file_not_found(self) -> None:
         """Тест обработки отсутствующего файла"""
         with self.assertRaises(FileNotFoundError):
-            Category.load_from_json("nonexistent_file.json")
+            JsonLoader.load_categories("nonexistent_file.json")
 
     def test_invalid_json(self) -> None:
         """Тест обработки невалидного JSON"""
-        with open(self.temp_file.name, "w") as f:
+        with open(self.temp_file.name, "w", encoding="utf-8") as f:
             f.write("{invalid json}")
 
         with self.assertRaises(json.JSONDecodeError):
-            Category.load_from_json(self.temp_file.name)
+            JsonLoader.load_categories(self.temp_file.name)
 
     def test_missing_required_field(self) -> None:
         """Тест отсутствия обязательного поля"""
-        invalid_data = [{"description": "Нет названия", "products": []}]
-        with open(self.temp_file.name, "w") as f:
+        invalid_data = [{"description": "No name", "products": []}]
+        with open(self.temp_file.name, "w", encoding="utf-8") as f:
             json.dump(invalid_data, f)
 
-        with self.assertRaises(KeyError):
-            Category.load_from_json(self.temp_file.name)
+        with self.assertRaises(ValueError) as context:
+            JsonLoader.load_categories(self.temp_file.name)
+        self.assertIn("Отсутствует обязательное поле", str(context.exception))
 
-    def test_wrong_data_structure(self) -> None:
-        """Тест некорректной структуры данных"""
-        with open(self.temp_file.name, "w") as f:
-            json.dump({"not_a_list": True}, f)
+    def test_empty_products_list(self) -> None:
+        """Тест пустого списка продуктов"""
+        test_data = [{"name": "Empty category", "description": "No products", "products": []}]
 
-        with self.assertRaises(ValueError):
-            Category.load_from_json(self.temp_file.name)
+        with open(self.temp_file.name, "w", encoding="utf-8") as f:
+            json.dump(test_data, f)
+
+        categories = JsonLoader.load_categories(self.temp_file.name)
+        self.assertEqual(len(categories), 1)
+        self.assertEqual(categories[0].products, "")
+
+    def test_file_permission_error(self) -> None:
+        """Тест ошибки доступа к файлу"""
+        with patch("builtins.open", side_effect=PermissionError("Access denied")):
+            with self.assertRaises(PermissionError):
+                JsonLoader.load_categories("any_file.json")
 
 
 if __name__ == "__main__":
