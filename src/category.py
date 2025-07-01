@@ -1,5 +1,7 @@
 from __future__ import annotations
-from typing import List, Optional, Type
+
+from typing import List, Optional
+
 from src.product import Product
 
 
@@ -43,19 +45,26 @@ class Category:
         """Возвращает общее количество товаров"""
         return cls._product_count
 
-    def add_product(self, product: Product, allowed_types: Optional[List[Type[Product]]] = None) -> None:
+    def add_product(self, product: Product, allowed_types: list[type[Product]] = None) -> None:
         """
-        Добавляет продукт в категорию
-        :param product: Объект продукта
-        :param allowed_types: Список разрешённых типов продуктов
-        :raises TypeError: Если тип продукта недопустим
+        Добавляет продукт в категорию с проверкой типа через type()
+        :param product: Добавляемый продукт
+        :param allowed_types: Список разрешённых типов (классов)
+        :raises TypeError: Если тип продукта не соответствует ограничениям
         """
-        if not isinstance(product, Product):
-            raise TypeError("Можно добавлять только объекты класса Product")
+        # Проверка базового типа через type()
+        if type(product) not in (Product, *Product.__subclasses__()):
+            raise TypeError("Можно добавлять только объекты класса Product или его наследников")
 
-        if allowed_types and not any(isinstance(product, t) for t in allowed_types):
-            allowed_names = [t.__name__ for t in allowed_types]
-            raise TypeError(f"Разрешены только продукты типов: {', '.join(allowed_names)}")
+        # Проверка ограничений по типам
+        if allowed_types:
+            product_type = type(product)
+            if not any(product_type is t for t in allowed_types):
+                allowed_names = [t.__name__ for t in allowed_types]
+                raise TypeError(
+                    f"Разрешены только продукты конкретных типов: {', '.join(allowed_names)}. "
+                    f"Получен: {product_type.__name__}"
+                )
 
         self.__products.append(product)
         Category._product_count += 1
