@@ -6,11 +6,13 @@ from src.product import Product
 
 
 class Category:
+    category_count = None
     product_count = None
     _category_count: int = 0
     _product_count: int = 0
 
     def __init__(self, name: str, description: str, products: Optional[List[Product]] = None):
+        self.category_count = None
         self._Category__products = None
         self.name = name
         self.description = description

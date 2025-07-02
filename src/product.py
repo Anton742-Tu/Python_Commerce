@@ -1,34 +1,33 @@
-from __future__ import annotations
+from src.base_product import BaseProduct
+from src.logging_mixin import LoggingMixin
 
 
-class Product:
-    def __init__(self, name: str, description: str, price: float, quantity: int) -> None:
-        self.name = name
-        self.description = description
-        self.price = price
-        self.quantity = quantity
-
-    def __add__(self, other: Product) -> float:
+class Product(LoggingMixin, BaseProduct):
+    def __init__(self, name: str, description: str, price: float, quantity: int, **kwargs):
         """
-        Сложение двух продуктов одного класса
-        :param other: Второй объект для сложения
-        :return: Сумма произведений цены на количество
-        :raises TypeError: Если объекты разных классов
+        Базовый класс продукта с логированием
+        :param name: Название
+        :param description: Описание
+        :param price: Цена
+        :param quantity: Количество
         """
-        if not isinstance(other, self.__class__):
-            raise TypeError(f"Нельзя складывать {self.__class__.__name__} и {other.__class__.__name__}")
-
-        return (self.price * self.quantity) + (other.price * other.quantity)
+        super().__init__(name=name, description=description, price=price, quantity=quantity, **kwargs)
 
     def __str__(self) -> str:
+        """Строковое представление продукта"""
         return f"{self.name}, {self.price} руб. Остаток: {self.quantity} шт."
 
-    def __eq__(self, other: object) -> bool:
-        """Проверка на равенство продуктов (по названию)"""
-        if not isinstance(other, Product):
-            return False
-        return self.name == other.name
+    @property
+    def additional_info(self) -> str:
+        """Дополнительная информация (базовый вариант)"""
+        return "Базовый продукт"
 
     @classmethod
-    def from_dict(cls, p):
-        pass
+    def create_product(cls, data: dict) -> 'Product':
+        """Создание продукта из словаря"""
+        return cls(
+            name=str(data['name']),
+            description=str(data['description']),
+            price=float(data['price']),
+            quantity=int(data['quantity'])
+        )
