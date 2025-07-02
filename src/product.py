@@ -23,11 +23,11 @@ class Product(LoggingMixin, BaseProduct):
         return "Базовый продукт"
 
     @classmethod
-    def create_product(cls, data: dict) -> 'Product':
+    def create_product(cls, data: dict) -> "Product":
         """Создание продукта из словаря"""
         return cls(
-            name=str(data['name']),
-            description=str(data['description']),
-            price=float(data['price']),
-            quantity=int(data['quantity'])
+            name=str(data["name"]),
+            description=str(data["description"]),
+            price=float(data["price"]),
+            quantity=int(data["quantity"]),
         )

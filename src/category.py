@@ -1,19 +1,21 @@
 from __future__ import annotations
-
 from typing import List, Optional
-
 from src.product import Product
 
 
 class Category:
-    category_count = None
-    product_count = None
     _category_count: int = 0
     _product_count: int = 0
 
     def __init__(self, name: str, description: str, products: Optional[List[Product]] = None):
-        self.category_count = None
-        self._Category__products = None
+        """
+        Initialize a category with name, description, and optional list of products.
+
+        Args:
+            name: Category name
+            description: Category description
+            products: Optional list of Product objects
+        """
         self.name = name
         self.description = description
         self.__products = products.copy() if products else []
@@ -23,9 +25,7 @@ class Category:
 
     @classmethod
     def from_dict(cls, data: dict) -> Category:
-        """Создает категорию из словаря (без загрузки файла)"""
-        from .product import Product  # Локальный импорт во избежание циклических зависимостей
-
+        """Create a category from a dictionary"""
         products = [
             Product(
                 name=str(p["name"]),
@@ -39,53 +39,57 @@ class Category:
 
     @classmethod
     def get_category_count(cls) -> int:
-        """Возвращает общее количество категорий"""
+        """Return total number of categories created"""
         return cls._category_count
 
     @classmethod
     def get_product_count(cls) -> int:
-        """Возвращает общее количество товаров"""
+        """Return total number of products across all categories"""
         return cls._product_count
 
     def add_product(self, product: Product, allowed_types: list[type[Product]] = None) -> None:
         """
-        Добавляет продукт в категорию с проверкой типа через type()
-        :param product: Добавляемый продукт
-        :param allowed_types: Список разрешённых типов (классов)
-        :raises TypeError: Если тип продукта не соответствует ограничениям
-        """
-        # Проверка базового типа через type()
-        if type(product) not in (Product, *Product.__subclasses__()):
-            raise TypeError("Можно добавлять только объекты класса Product или его наследников")
+        Add a product to the category with type checking
 
-        # Проверка ограничений по типам
-        if allowed_types:
-            product_type = type(product)
-            if not any(product_type is t for t in allowed_types):
-                allowed_names = [t.__name__ for t in allowed_types]
-                raise TypeError(
-                    f"Разрешены только продукты конкретных типов: {', '.join(allowed_names)}. "
-                    f"Получен: {product_type.__name__}"
-                )
+        Args:
+            product: Product to add
+            allowed_types: List of allowed product types
+
+        Raises:
+            TypeError: If product type doesn't match restrictions
+        """
+        if not isinstance(product, Product):
+            raise TypeError("Can only add objects of Product class or its subclasses")
+
+        if allowed_types and not isinstance(product, tuple(allowed_types)):
+            allowed_names = [t.__name__ for t in allowed_types]
+            raise TypeError(
+                f"Only products of these types are allowed: {', '.join(allowed_names)}. "
+                f"Received: {type(product).__name__}"
+            )
 
         self.__products.append(product)
         Category._product_count += 1
 
     @property
-    def products(self) -> str:
-        """Возвращает строковое представление товаров"""
-        return "\n".join(str(p) for p in self.__products)
+    def products(self) -> List[Product]:
+        """Return the list of products in this category"""
+        return self.__products
 
     def __str__(self) -> str:
-        """Строковое представление категории"""
-        return f"{self.name}, количество продуктов: {len(self.__products)}"
+        """String representation of the category"""
+        return f"{self.name}, количество продуктов: {len(self.__products)} шт."
 
     @classmethod
     def reset_counters(cls) -> None:
-        """Сбрасывает счётчики категорий и товаров"""
+        """Reset category and product counters"""
         cls._category_count = 0
         cls._product_count = 0
 
     @property
-    def Category__products(self):
-        return self._Category__products
+    def category_count(self):
+        return self._category_count
+
+    @property
+    def product_count(self):
+        return self._product_count
