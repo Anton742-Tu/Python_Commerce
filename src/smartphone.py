@@ -1,7 +1,10 @@
 from src.product import Product
+from typing import Dict, Any
 
 
 class Smartphone(Product):
+    """Класс для смартфонов, наследующий от Product"""
+
     def __init__(
         self,
         name: str,
@@ -12,29 +15,23 @@ class Smartphone(Product):
         model: str,
         memory: int,
         color: str,
-        **kwargs,
-    ):
+        **kwargs: Any,
+    ) -> None:
         """
-        Smartphone product class inheriting from Product.
+        Инициализация смартфона
 
         Args:
-            name: Product name
-            description: Product description
-            price: Product price (must be positive)
-            quantity: Initial stock quantity
-            performance: CPU performance in GHz (must be positive)
-            model: Device model name
-            memory: RAM capacity in GB (must be positive)
-            color: Device color
-            kwargs: Additional product attributes
+            name: Название
+            description: Описание
+            price: Цена
+            quantity: Количество
+            performance: Производительность (GHz)
+            model: Модель
+            memory: Объем памяти (GB)
+            color: Цвет
+            kwargs: Дополнительные параметры
         """
-        super().__init__(name, description, price, quantity, **kwargs)
-
-        if performance <= 0:
-            raise ValueError("Performance must be positive")
-        if memory <= 0:
-            raise ValueError("Memory must be positive")
-
+        super().__init__(name=name, description=description, price=price, quantity=quantity, **kwargs)
         self.performance = performance
         self.model = model
         self.memory = memory
@@ -42,26 +39,27 @@ class Smartphone(Product):
 
     @property
     def additional_info(self) -> str:
-        """Returns detailed smartphone specifications."""
+        """Дополнительная информация о смартфоне"""
         return (
-            f"Model: {self.model}, Color: {self.color}, "
-            f"Performance: {self.performance}GHz, Memory: {self.memory}GB"
+            f"Модель: {self.model}, Цвет: {self.color}, "
+            f"Производительность: {self.performance} GHz, Память: {self.memory}GB"
         )
 
     def __str__(self) -> str:
-        """String representation combining base product info and smartphone details."""
-        return f"{super().__str__()}\n{self.additional_info}"
+        """Строковое представление смартфона"""
+        base_info = super().__str__()
+        return f"{base_info}\n{self.additional_info}"
 
     @classmethod
-    def create_product(cls, data: dict) -> "Smartphone":
-        """Factory method to create smartphone from dictionary data."""
+    def create_product(cls, data: Dict[str, Any]) -> "Smartphone":
+        """Создание смартфона из словаря"""
         return cls(
             name=str(data["name"]),
             description=str(data["description"]),
             price=float(data["price"]),
             quantity=int(data["quantity"]),
             performance=float(data.get("performance", 0)),
-            model=str(data.get("model", "Unknown")),
+            model=str(data.get("model", "")),
             memory=int(data.get("memory", 0)),
-            color=str(data.get("color", "Unknown")),
+            color=str(data.get("color", "")),
         )
