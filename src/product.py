@@ -1,34 +1,75 @@
-from __future__ import annotations
+from abc import ABC, abstractmethod
+from decimal import Decimal
+from typing import Dict, Any
 
 
-class Product:
-    def __init__(self, name: str, description: str, price: float, quantity: int) -> None:
+class BaseProduct(ABC):
+    """Абстрактный базовый класс для всех продуктов"""
+
+    @abstractmethod
+    def __init__(self, name: str, description: str, price: float, quantity: int, **kwargs: Any) -> None:
         self.name = name
         self.description = description
         self.price = price
         self.quantity = quantity
 
-    def __add__(self, other: Product) -> float:
-        """
-        Сложение двух продуктов одного класса
-        :param other: Второй объект для сложения
-        :return: Сумма произведений цены на количество
-        :raises TypeError: Если объекты разных классов
-        """
-        if not isinstance(other, self.__class__):
-            raise TypeError(f"Нельзя складывать {self.__class__.__name__} и {other.__class__.__name__}")
-
-        return (self.price * self.quantity) + (other.price * other.quantity)
-
+    @abstractmethod
     def __str__(self) -> str:
-        return f"{self.name}, {self.price} руб. Остаток: {self.quantity} шт."
+        """Абстрактный метод строкового представления"""
+        pass
 
-    def __eq__(self, other: object) -> bool:
-        """Проверка на равенство продуктов (по названию)"""
-        if not isinstance(other, Product):
-            return False
-        return self.name == other.name
+    @property
+    @abstractmethod
+    def additional_info(self) -> str:
+        """Абстрактное свойство с дополнительной информацией"""
+        pass
 
     @classmethod
-    def from_dict(cls, p):
+    @abstractmethod
+    def create_product(cls, data: Dict[str, Any]) -> "BaseProduct":
+        """Абстрактный метод создания продукта из словаря"""
         pass
+
+    def apply_discount(self, discount: float) -> None:
+        """Общий метод для применения скидки"""
+        if discount <= 0 or discount > 1:
+            raise ValueError("Скидка должна быть между 0 и 1")
+        self.price = float(Decimal(str(self.price)) * (1 - Decimal(str(discount))))
+
+
+class Product(BaseProduct):
+    """Конкретная реализация продукта"""
+
+    def __init__(self, name: str, description: str, price: float, quantity: int, **kwargs: Any) -> None:
+        """
+        Инициализация продукта
+        :param name: Название продукта
+        :param description: Описание продукта
+        :param price: Цена продукта (должна быть положительной)
+        :param quantity: Количество продукта (неотрицательное)
+        :param kwargs: Дополнительные параметры
+        """
+        super().__init__(name, description, price, quantity, **kwargs)
+        self.name = name
+        self.description = description
+        self.price = price
+        self.quantity = quantity
+
+    def __str__(self) -> str:
+        """Строковое представление продукта"""
+        return f"{self.name}, {self.price} руб. Остаток: {self.quantity} шт."
+
+    @property
+    def additional_info(self) -> str:
+        """Дополнительная информация о продукте"""
+        return "Базовый продукт"
+
+    @classmethod
+    def create_product(cls, data: Dict[str, Any]) -> "Product":
+        """Создание продукта из словаря"""
+        return cls(
+            name=str(data["name"]),
+            description=str(data["description"]),
+            price=float(data["price"]),
+            quantity=int(data["quantity"]),
+        )

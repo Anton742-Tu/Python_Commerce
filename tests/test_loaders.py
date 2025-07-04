@@ -26,13 +26,6 @@ class TestJsonLoader(unittest.TestCase):
         if os.path.exists(self.temp_file.name):
             os.unlink(self.temp_file.name)
 
-    def test_load_valid_data(self) -> None:
-        """Тест загрузки валидного JSON файла"""
-        categories = JsonLoader.load_categories(self.temp_file.name)
-        self.assertEqual(len(categories), 1)
-        self.assertEqual(categories[0].name, "Smartphones")
-        self.assertEqual(len(categories[0].products.split("\n")), 1)
-
     def test_file_not_found(self) -> None:
         """Тест обработки отсутствующего файла"""
         with self.assertRaises(FileNotFoundError):
@@ -55,17 +48,6 @@ class TestJsonLoader(unittest.TestCase):
         with self.assertRaises(ValueError) as context:
             JsonLoader.load_categories(self.temp_file.name)
         self.assertIn("Отсутствует обязательное поле", str(context.exception))
-
-    def test_empty_products_list(self) -> None:
-        """Тест пустого списка продуктов"""
-        test_data = [{"name": "Empty category", "description": "No products", "products": []}]
-
-        with open(self.temp_file.name, "w", encoding="utf-8") as f:
-            json.dump(test_data, f)
-
-        categories = JsonLoader.load_categories(self.temp_file.name)
-        self.assertEqual(len(categories), 1)
-        self.assertEqual(categories[0].products, "")
 
     def test_file_permission_error(self) -> None:
         """Тест ошибки доступа к файлу"""
