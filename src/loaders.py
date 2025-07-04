@@ -37,25 +37,30 @@ class JsonLoader:
         except KeyError as e:
             raise ValueError(f"Отсутствует обязательное поле в файле {file_path}: {e}") from e
 
-    @staticmethod
-    def save_categories(file_path: str | Path, categories: List[Category]) -> None:
-        """Сохранение категорий в JSON файл"""
-        data = [
-            {
-                "name": cat.name,
-                "description": cat.description,
-                "products": [
-                    {
-                        "name": prod.name,
-                        "description": prod.description,
-                        "price": prod.price,
-                        "quantity": prod.quantity,
-                    }
-                    for prod in cat.Category__products
-                ],
-            }
-            for cat in categories
-        ]
 
-        with open(file_path, "w", encoding="utf-8") as file:
-            json.dump(data, file, ensure_ascii=False, indent=2)
+def save_categories(file_path: str | Path, categories: List[Category]) -> None:
+    """Save categories to JSON file
+
+    Args:
+        file_path: Path to save file
+        categories: List of categories to save
+    """
+    data = [
+        {
+            "name": cat.name,
+            "description": cat.description,
+            "products": [
+                {
+                    "name": prod.name,
+                    "description": prod.description,
+                    "price": prod.price,
+                    "quantity": prod.quantity,
+                }
+                for prod in cat.products  # Используем публичное свойство products
+            ],
+        }
+        for cat in categories
+    ]
+
+    with open(file_path, "w", encoding="utf-8") as file:
+        json.dump(data, file, ensure_ascii=False, indent=2)
