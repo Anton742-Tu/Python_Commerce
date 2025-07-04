@@ -41,6 +41,12 @@ Python-Commerce/
 
 │ └── products.json
 
+├── .gitignore
+
+├── main.py
+
+├── requirements.txt
+
 └── README.md
 
 ## 🚀 Быстрый старт
