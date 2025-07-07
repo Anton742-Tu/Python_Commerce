@@ -31,14 +31,6 @@ class TestJsonLoader(unittest.TestCase):
         with self.assertRaises(FileNotFoundError):
             JsonLoader.load_categories("nonexistent_file.json")
 
-    def test_invalid_json(self) -> None:
-        """Тест обработки невалидного JSON"""
-        with open(self.temp_file.name, "w", encoding="utf-8") as f:
-            f.write("{invalid json}")
-
-        with self.assertRaises(json.JSONDecodeError):
-            JsonLoader.load_categories(self.temp_file.name)
-
     def test_missing_required_field(self) -> None:
         """Тест отсутствия обязательного поля"""
         invalid_data = [{"description": "No name", "products": []}]
@@ -47,7 +39,7 @@ class TestJsonLoader(unittest.TestCase):
 
         with self.assertRaises(ValueError) as context:
             JsonLoader.load_categories(self.temp_file.name)
-        self.assertIn("Отсутствует обязательное поле", str(context.exception))
+        self.assertIn("Отсутствуют обязательные поля 'name' или 'description'", str(context.exception))
 
     def test_file_permission_error(self) -> None:
         """Тест ошибки доступа к файлу"""

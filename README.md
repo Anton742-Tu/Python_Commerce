@@ -83,6 +83,11 @@ product = Product(
 category = Category("Электроника", "Техника для дома")
 category.add_product(product)
 ```
+```
+category = Category("Электроника", "Техника")
+print(f"Средняя цена: {category.get_average_price():.2f} руб.")
+# Для пустой категории выведет: Средняя цена: 0.00 руб.
+```
 ## Работа с JSON
 ```
 # Загрузка категорий из файла
