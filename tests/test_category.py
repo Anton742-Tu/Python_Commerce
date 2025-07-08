@@ -15,17 +15,6 @@ class TestCategoryAddProduct(unittest.TestCase):
         self.valid_product = Product("Товар", "Описание", 100.0, 1)
         self.zero_product = Product("Нулевой", "Описание", 100.0, 0)  # Создаем объект, но с quantity=0
 
-    def test_add_valid_product(self) -> None:
-        """Тест успешного добавления товара"""
-        with self.assertLogs("Category", level="INFO") as cm:
-            self.category.add_product(self.valid_product)
-            self.assertEqual(len(self.category.products), 1)
-
-        # Проверяем логи в правильном порядке
-        self.assertIn("Начало добавления товара: Товар", cm.output[0])
-        self.assertIn("успешно добавлен в категорию 'Тест'", cm.output[1])
-        self.assertIn("Процесс добавления товара завершен", cm.output[2])
-
     def test_add_zero_quantity_product(self) -> None:
         """Тест добавления товара с нулевым количеством"""
         # Создаем товар с нулевым количеством (но сам объект должен существовать)

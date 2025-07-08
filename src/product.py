@@ -1,81 +1,32 @@
-from abc import ABC, abstractmethod
 from decimal import Decimal
 from typing import Any, Dict
 
+from src.base_product import BaseProduct
 
-class BaseProduct(ABC):
-    """Абстрактный базовый класс для всех продуктов"""
 
-    @abstractmethod
-    def __init__(self, name: str, description: str, price: float, quantity: int) -> None:
+class Product(BaseProduct):
+    """Конкретная реализация продукта"""
+
+    def __init__(
+            self,
+            name: str,
+            description: str,
+            price: float,
+            quantity: int,
+            **kwargs: Any
+    ) -> None:
         """
         Инициализация продукта
-
-        Args:
-            name: Название продукта
-            description: Описание продукта
-            price: Цена продукта (должна быть положительной)
-            quantity: Количество продукта не может быть отрицательным
-            kwargs: Дополнительные параметры
-
-        Raises:
-            ValueError: Если количество ≤ 0 или цена ≤ 0
+        :param name: Название продукта
+        :param description: Описание продукта
+        :param price: Цена продукта (должна быть положительной)
+        :param quantity: Количество продукта (неотрицательное)
+        :param kwargs: Дополнительные параметры
         """
+        super().__init__(name, description, price, quantity)
+        self.name = name
+        self.description = description
         self.price = price
-        if quantity <= 0:  # Разрешаем 0, но не отрицательные значения
-            raise ValueError("Количество не может быть отрицательным")
-        if price <= 0:
-            raise ValueError("Цена должна быть положительной")
-
-        self.name = name
-        self.description = description
-        self._price = Decimal(str(price))
-        self.quantity = quantity
-
-    @abstractmethod
-    def __str__(self) -> str:
-        """Абстрактный метод строкового представления"""
-        pass
-
-    @property
-    @abstractmethod
-    def additional_info(self) -> str:
-        """Абстрактное свойство с дополнительной информацией"""
-        pass
-
-    @classmethod
-    @abstractmethod
-    def create_product(cls, data: Dict[str, Any]) -> "BaseProduct":
-        """Абстрактный метод создания продукта из словаря"""
-        pass
-
-    def apply_discount(self, discount: float) -> None:
-        """Общий метод для применения скидки"""
-        if discount <= 0 or discount > 1:
-            raise ValueError("Скидка должна быть между 0 и 1")
-        self.price = float(Decimal(str(self.price)) * (1 - Decimal(str(discount))))
-
-
-class Product:
-    def __init__(self, name: str, description: str, price: float, quantity: int, **kwargs: Any) -> None:
-        """
-        Инициализация продукта
-
-        Args:
-            name: Название продукта
-            description: Описание продукта
-            price: Цена продукта (положительная)
-            quantity: Количество продукта (положительное)
-            kwargs: Дополнительные атрибуты
-        """
-        if price <= 0:
-            raise ValueError("Цена должна быть положительной")
-        if quantity <= 0:
-            raise ValueError("Количество должно быть положительным")
-
-        self.name = name
-        self.description = description
-        self._price = Decimal(str(price))
         self.quantity = quantity
 
     @property
