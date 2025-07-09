@@ -1,15 +1,16 @@
-import unittest
-import os
 import json
+import os
 from tempfile import NamedTemporaryFile
-from unittest.mock import patch
+from typing import List, Dict, Any
+from unittest import TestCase, mock
 from src.loaders import JsonLoader
+from src.category import Category
 
 
-class TestJsonLoader(unittest.TestCase):
+class TestJsonLoader(TestCase):
     def setUp(self) -> None:
         """Подготовка тестовых данных"""
-        self.test_data = [
+        self.test_data: List[Dict[str, Any]] = [
             {
                 "name": "Smartphones",
                 "description": "Mobile devices",
@@ -33,7 +34,7 @@ class TestJsonLoader(unittest.TestCase):
 
     def test_missing_required_field(self) -> None:
         """Тест отсутствия обязательного поля"""
-        invalid_data = [{"description": "No name", "products": []}]
+        invalid_data: List[Dict[str, Any]] = [{"description": "No name", "products": []}]
         with open(self.temp_file.name, "w", encoding="utf-8") as f:
             json.dump(invalid_data, f)
 
@@ -43,10 +44,12 @@ class TestJsonLoader(unittest.TestCase):
 
     def test_file_permission_error(self) -> None:
         """Тест ошибки доступа к файлу"""
-        with patch("builtins.open", side_effect=PermissionError("Access denied")):
+        with mock.patch("builtins.open", side_effect=PermissionError("Access denied")):
             with self.assertRaises(PermissionError):
                 JsonLoader.load_categories("any_file.json")
 
-
-if __name__ == "__main__":
-    unittest.main()
+    def test_load_valid_data(self) -> None:
+        """Тест загрузки валидных данных"""
+        categories: List[Category] = JsonLoader.load_categories(self.temp_file.name)
+        self.assertEqual(len(categories), 1)
+        self.assertEqual(categories[0].name, "Smartphones")

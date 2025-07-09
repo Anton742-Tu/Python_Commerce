@@ -7,14 +7,7 @@ from src.base_product import BaseProduct
 class Product(BaseProduct):
     """Конкретная реализация продукта"""
 
-    def __init__(
-            self,
-            name: str,
-            description: str,
-            price: float,
-            quantity: int,
-            **kwargs: Any
-    ) -> None:
+    def __init__(self, name: str, description: str, price: float, quantity: int, **kwargs: Any) -> None:
         """
         Инициализация продукта
         :param name: Название продукта
