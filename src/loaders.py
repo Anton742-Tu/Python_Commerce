@@ -31,11 +31,18 @@ class JsonLoader:
             data = json.loads(json_str)
             if not isinstance(data, list):
                 raise ValueError(f"Файл {file_path} должен содержать список категорий")
-            return [Category.from_dict(item) for item in data]
+
+            categories = []
+            for item in data:
+                try:
+                    categories.append(Category.from_dict(item))
+                except ValueError as e:
+                    raise ValueError(f"Ошибка в данных из {file_path}: {str(e)}")
+
+            return categories
+
         except json.JSONDecodeError as e:
-            raise json.JSONDecodeError(f"Ошибка декодирования JSON в файле {file_path}", e.doc, e.pos) from e
-        except KeyError as e:
-            raise ValueError(f"Отсутствует обязательное поле в файле {file_path}: {e}") from e
+            raise ValueError(f"Ошибка JSON в файле {file_path}: {str(e)}")
 
 
 def save_categories(file_path: str | Path, categories: List[Category]) -> None:

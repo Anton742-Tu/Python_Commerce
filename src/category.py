@@ -1,89 +1,99 @@
-from typing import List, Optional, Type, Dict, Any, ClassVar
+import logging
+from typing import List, Optional, Type
+
+from mypy.reachability import TypeVar
+
+from src.exceptions import ZeroQuantityError
 from src.product import Product
-from src.base_container import BaseContainer
+
+T = TypeVar("T", bound=Product)
 
 
-class Category(BaseContainer[Product]):
-    """Класс категории продуктов"""
-
-    product_count = None
-    category_count = None
-    _category_count: ClassVar[int] = 0
-    _product_count: ClassVar[int] = 0
-
+class Category:
     def __init__(self, name: str, description: str, products: Optional[List[Product]] = None):
-        """
-        Инициализация категории
-        :param name: Название категории
-        :param description: Описание категории
-        :param products: Список продуктов (опционально)
-        """
-        super().__init__(name, description)
-        self.product_count = None
-        self.category_count = None
-        self._items = products.copy() if products else []
-        Category._category_count += 1
-        Category._product_count += len(self._items)
+        self.name = name
+        self.description = description
+        self._products = products if products is not None else []
+        self.logger = logging.getLogger("Category")
+        self.logger.setLevel(logging.INFO)
 
-    @property
-    def items(self) -> List[Product]:
-        """Реализация абстрактного свойства items"""
-        return self._items
+        # Добавляем обработчик, если его нет
+        if not self.logger.handlers:
+            handler = logging.StreamHandler()
+            handler.setFormatter(logging.Formatter("%(name)s - %(message)s"))
+            self.logger.addHandler(handler)
+
+    @classmethod
+    def from_dict(cls, data: dict) -> "Category":
+        """Создает категорию из словаря"""
+        from src.product import Product  # Локальный импорт во избежание циклических зависимостей
+
+        # Проверяем обязательные поля
+        if "name" not in data or "description" not in data:
+            raise ValueError("Отсутствуют обязательные поля 'name' или 'description'")
+
+        # Обрабатываем продукты
+        products = []
+        if "products" in data:
+            for product_data in data["products"]:
+                try:
+                    products.append(
+                        Product(
+                            name=str(product_data["name"]),
+                            description=str(product_data["description"]),
+                            price=float(product_data["price"]),
+                            quantity=int(product_data["quantity"]),
+                        )
+                    )
+                except (KeyError, ValueError) as e:
+                    raise ValueError(f"Ошибка создания продукта: {str(e)}")
+
+        return cls(name=str(data["name"]), description=str(data["description"]), products=products)
 
     @property
     def products(self) -> List[Product]:
-        """Алиас для items для обратной совместимости"""
-        return self._items
-
-    @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "Category":
-        """Создает категорию из словаря"""
-        from src.product import Product  # Локальный импорт
-
-        products = [
-            Product(
-                name=str(p["name"]),
-                description=str(p["description"]),
-                price=float(p["price"]),
-                quantity=int(p["quantity"]),
-            )
-            for p in data.get("products", [])
-            if all(key in p for key in ["name", "description", "price", "quantity"])
-        ]
-        return cls(name=str(data["name"]), description=str(data["description"]), products=products)
+        return self._products
 
     def add_product(self, product: Product, allowed_types: Optional[List[Type[Product]]] = None) -> None:
-        """
-        Добавляет продукт в категорию с проверкой типа
-
-        Args:
-            product: Объект продукта для добавления
-            allowed_types: Список разрешенных типов продуктов
-
-        Raises:
-            TypeError: Если тип продукта не соответствует требованиям
-            ValueError: Если продукт None
-        """
+        """Добавляет товар в категорию с проверкой типа"""
         if product is None:
-            raise ValueError("Нельзя добавить None в качестве продукта")
+            raise ValueError("Нельзя добавить None в качестве товара")
 
-        if not isinstance(product, Product):
-            raise TypeError(f"Ожидается Product, получен {type(product).__name__}")
+        self.logger.info(f"Начало добавления товара: {product.name}")
 
-        if allowed_types and not any(isinstance(product, t) for t in allowed_types):
-            allowed_names = [t.__name__ for t in allowed_types]
-            raise TypeError(f"Разрешены только: {', '.join(allowed_names)}. " f"Получен: {type(product).__name__}")
+        try:
+            if not isinstance(product, Product):
+                raise TypeError("Можно добавлять только объекты класса Product")
 
-        self._items.append(product)
+            if product.quantity <= 0:
+                raise ZeroQuantityError("Товар с нулевым количеством не может быть добавлен")
 
-    @classmethod
-    def reset_counters(cls) -> None:
-        pass
+            if allowed_types and not any(isinstance(product, t) for t in allowed_types):
+                allowed_names = [t.__name__ for t in allowed_types]
+                raise TypeError(f"Разрешены только: {', '.join(allowed_names)}")
 
-    @classmethod
-    def get_category_count(cls) -> None:
-        pass
+            self._products.append(product)
+            self.logger.info(f"Товар '{product.name}' успешно добавлен")
 
-    @classmethod
-    def get_product_count(cls) -> None:
-        pass
+        except (ZeroQuantityError, TypeError) as e:
+            self.logger.error(str(e))
+            raise
+        finally:
+            self.logger.info("Обработка добавления товара завершена")
+
+    def get_average_price(self) -> float:
+        """Рассчитывает среднюю цену товаров"""
+        if not self._products:
+            self.logger.info("Категория пуста, средняя цена: 0")
+            return 0.0
+
+        valid_products = [p for p in self._products if p.quantity > 0]
+        if not valid_products:
+            self.logger.info("Нет товаров с положительным количеством, средняя цена: 0")
+            return 0.0
+
+        total_price = sum(p.price * p.quantity for p in valid_products)
+        total_quantity = sum(p.quantity for p in valid_products)
+        average = total_price / total_quantity
+        self.logger.info(f"Средняя цена: {average:.2f}")
+        return average
